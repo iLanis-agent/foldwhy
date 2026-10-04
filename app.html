@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FoldWhy app - are these two strings the same?</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;background:#14130b;color:#f6f3dc;line-height:1.5}
+.wrap{max-width:880px;margin:0 auto;padding:28px 16px 50px}
+h1{font-size:28px}h1 span{color:#fde047}.sub{color:#bdb88e;margin:6px 0 14px}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:14px}@media(max-width:640px){.cols{grid-template-columns:1fr}}
+input{width:100%;background:#211f10;color:#f6f3dc;border:1px solid #4a4620;border-radius:10px;padding:11px;font:18px ui-monospace,Menlo,Consolas,monospace}
+label{display:block;font-size:13px;color:#bdb88e;margin:12px 0 4px}
+.pre button{background:#252310;color:#fef08a;border:1px solid #4a4620;border-radius:20px;padding:6px 12px;margin:0 6px 6px 0;cursor:pointer;font-size:13px}
+table{width:100%;border-collapse:collapse;margin-top:10px;font-size:14px}th,td{text-align:left;padding:7px 8px;border-bottom:1px solid #35320f;vertical-align:top}th{color:#bdb88e;font-weight:600}
+code{font-family:ui-monospace,Menlo,Consolas,monospace;color:#fef08a;font-size:13px}.no{color:#f87171}.yes{color:#86efac}.dim{color:#8f8a63;font-size:12px}
+h2{font-size:16px;margin:20px 0 4px;color:#fde047}.verdict{background:#211f10;border-left:3px solid #fde047;padding:10px 14px;margin:14px 0;border-radius:6px}.foot{color:#8f8a63;font-size:13px;margin-top:18px}a{color:#fde047}
+</style></head><body><div class="wrap">
+<h1>Fold<span>Why</span></h1>
+<div class="sub">Two strings that look the same are not always the same. Paste both and see at which strictness level they become equal, and what each form looks like in code points.</div>
+<div class="pre" id="pre"></div>
+<div class="cols"><div><label for="a">String A</label><input id="a" type="text" spellcheck="false" autocomplete="off"></div><div><label for="b">String B</label><input id="b" type="text" spellcheck="false" autocomplete="off"></div></div>
+<div id="out"></div>
+<div class="foot">Normalization uses your browser's String.normalize (Unicode UAX #15). Case folding is an approximation built from upper and lower case mapping and checked against Python's casefold on a hand-picked set of 66 tricky characters, not all of Unicode. Locale rules (Turkish dotted i) are not applied. Runs in your browser; nothing is uploaded.</div>
+<div class="foot">Part of the <a href="https://ilanis-agent.github.io/app-factory/">app factory</a>. Source: <a href="https://github.com/iLanis-agent/foldwhy">GitHub</a>.</div>
+</div>
+<script>
+(function (root) {
+  'use strict';
+  // "Same text?" at six strictness levels. Normalization uses String.prototype.normalize (UAX #15). Case folding is approximated.
+  function fold(s) {   // approximation of Unicode full case folding, one code point at a time (so final sigma context cannot interfere)
+    return Array.from(s).map(function (c) { return c === '\u0131' ? c : c === '\u1e9e' ? 'ss' : c.toUpperCase().toLowerCase(); }).join('');
+  }
+  var LEVELS = [
+    { id: 'exact', name: 'Exact code points', f: function (s) { return s; }, why: 'Same sequence of code points.' },
+    { id: 'nfc', name: 'Canonical (NFC)', f: function (s) { return s.normalize('NFC'); }, why: 'Canonically equivalent: same character, written composed or decomposed (é vs e + U+0301).' },
+    { id: 'nfkc', name: 'Compatibility (NFKC)', f: function (s) { return s.normalize('NFKC'); }, why: 'Compatibility equivalent: same abstract character in a different form (ﬁ ligature, full-width letters, superscripts, Kelvin sign).' },
+    { id: 'fold', name: 'Case-insensitive (NFC + case folding)', f: function (s) { return fold(s.normalize('NFC')).normalize('NFC'); }, why: 'Equal after case folding (ß = ss, ς = σ, İ is not i).' },
+    { id: 'nfkcfold', name: 'Loosest (NFKC + case folding)', f: function (s) { return fold(s.normalize('NFKC')).normalize('NFKC'); }, why: 'Equal only when both compatibility forms and case are ignored.' }
+  ];
+  function cps(s) { return Array.from(s).map(function (c) { return 'U+' + c.codePointAt(0).toString(16).toUpperCase().padStart(4, '0'); }); }
+  function graphemes(s) { return typeof Intl !== 'undefined' && Intl.Segmenter ? Array.from(new Intl.Segmenter(undefined, { granularity: 'grapheme' }).segment(s)).length : null; }
+  function compare(a, b) {
+    var first = null, rows = LEVELS.map(function (L) { var x = L.f(a), y = L.f(b), eq = x === y; if (eq && first === null) first = L.id; return { id: L.id, name: L.name, equal: eq, a: x, b: y, why: L.why }; });
+    return { first: first, rows: rows };
+  }
+  function stats(s) { return { utf16: s.length, codePoints: Array.from(s).length, graphemes: graphemes(s), nfcLen: s.normalize('NFC').length, nfdLen: s.normalize('NFD').length, upper: s.toUpperCase(), lower: s.toLowerCase(), fold: fold(s), upperChangesLength: s.toUpperCase().length !== s.length }; }
+  var api = { LEVELS: LEVELS, compare: compare, stats: stats, cps: cps, fold: fold };
+  if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.FoldWhy = api;
+})(typeof window !== 'undefined' ? window : this);
+
+var P=[['caf\u00e9','cafe\u0301','composed vs decomposed'],['\ufb01le','file','ligature'],['Stra\u00dfe','STRASSE','German sharp s'],['\u212a','K','Kelvin sign'],['\u0130stanbul','istanbul','dotted capital I'],['\u03c3\u03bf\u03c2','\u03a3\u039f\u03a3','final sigma'],['\u212b','\u00c5','Angstrom'],['\u2460','1','circled 1'],['\uff21\uff22\uff23','ABC','full-width']];
+function esc(s){return String(s).replace(/[&<>]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;'}[c]})}
+var A=document.getElementById('a'),B=document.getElementById('b'),out=document.getElementById('out');
+function show(s){return s===''?'(empty)':esc(s)}
+function run(){var a=A.value,b=B.value;if(a===''&&b===''){out.innerHTML='';return}var r=FoldWhy.compare(a,b),h='';var lv=r.rows.filter(function(x){return x.id===r.first})[0];
+ h+='<div class="verdict">'+(r.first==='exact'?'<b>Identical</b>: same code points.':r.first?'<b>Not identical.</b> Equal at level: <b>'+esc(lv.name)+'</b>. '+esc(lv.why):'<b>Different at every level.</b>')+'</div>';
+ h+='<table><thead><tr><th>Level</th><th></th><th>A becomes</th><th>B becomes</th></tr></thead><tbody>'+r.rows.map(function(x){return'<tr><td>'+esc(x.name)+'</td><td class="'+(x.equal?'yes':'no')+'">'+(x.equal?'equal':'differ')+'</td><td>'+show(x.a)+'<br><code>'+FoldWhy.cps(x.a).join(' ')+'</code></td><td>'+show(x.b)+'<br><code>'+FoldWhy.cps(x.b).join(' ')+'</code></td></tr>'}).join('')+'</tbody></table>';
+ var sa=FoldWhy.stats(a),sb=FoldWhy.stats(b);
+ h+='<h2>Lengths</h2><table><thead><tr><th></th><th>A</th><th>B</th></tr></thead><tbody>'+[['UTF-16 units (JavaScript length)','utf16'],['Code points','codePoints'],['Characters as a person sees them','graphemes'],['Length after NFC','nfcLen'],['Length after NFD','nfdLen']].map(function(k){return'<tr><td>'+k[0]+'</td><td>'+sa[k[1]]+'</td><td>'+sb[k[1]]+'</td></tr>'}).join('')+'</tbody></table>';
+ if(sa.upperChangesLength||sb.upperChangesLength)h+='<div class="verdict">Upper-casing changes the length of '+(sa.upperChangesLength&&sb.upperChangesLength?'both strings':sa.upperChangesLength?'A':'B')+' (for example ß becomes SS), so index math across upper and lower case breaks.</div>';
+ out.innerHTML=h}
+A.addEventListener('input',run);B.addEventListener('input',run);
+var pre=document.getElementById('pre');P.forEach(function(k){var b=document.createElement('button');b.textContent=k[2];b.onclick=function(){A.value=k[0];B.value=k[1];run()};pre.appendChild(b)});
+A.value=P[0][0];B.value=P[0][1];run();
+</script></body></html>
