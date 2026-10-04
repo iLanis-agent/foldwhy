@@ -6,8 +6,8 @@
   }
   var LEVELS = [
     { id: 'exact', name: 'Exact code points', f: function (s) { return s; }, why: 'Same sequence of code points.' },
-    { id: 'nfc', name: 'Canonical (NFC)', f: function (s) { return s.normalize('NFC'); }, why: 'Canonically equivalent: same character, written composed or decomposed (é vs e + U+0301).' },
-    { id: 'nfkc', name: 'Compatibility (NFKC)', f: function (s) { return s.normalize('NFKC'); }, why: 'Compatibility equivalent: same abstract character in a different form (ﬁ ligature, full-width letters, superscripts, Kelvin sign).' },
+    { id: 'nfc', name: 'Canonical (NFC)', f: function (s) { return s.normalize('NFC'); }, why: 'Canonically equivalent: same character encoded differently (é as one code point or e + U+0301; Kelvin sign K and Angstrom sign Å also count).' },
+    { id: 'nfkc', name: 'Compatibility (NFKC)', f: function (s) { return s.normalize('NFKC'); }, why: 'Compatibility equivalent: same abstract character in a different form (ﬁ ligature, full-width letters, superscripts, circled digits).' },
     { id: 'fold', name: 'Case-insensitive (NFC + case folding)', f: function (s) { return fold(s.normalize('NFC')).normalize('NFC'); }, why: 'Equal after case folding (ß = ss, ς = σ, İ is not i).' },
     { id: 'nfkcfold', name: 'Loosest (NFKC + case folding)', f: function (s) { return fold(s.normalize('NFKC')).normalize('NFKC'); }, why: 'Equal only when both compatibility forms and case are ignored.' }
   ];
