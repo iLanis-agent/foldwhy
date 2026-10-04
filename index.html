@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FoldWhy - are these two strings the same?</title>
+<meta name="description" content="café and café are different strings. The Kelvin sign is not K. Straße is not STRASSE until you fold case. See at which level two strings become equal.">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;background:#14130b;color:#f6f3dc;line-height:1.6}
+.wrap{max-width:680px;margin:0 auto;padding:48px 20px 60px}.logo{font-size:46px;font-weight:800}.logo span{color:#fde047}
+.tag{font-size:19px;margin-top:10px;color:#d9d4aa}.cta{display:inline-block;margin-top:26px;background:#fde047;color:#14130b;font-weight:700;padding:14px 30px;border-radius:12px;text-decoration:none}
+h2{font-size:21px;margin:40px 0 10px}li{color:#bdb88e;margin-bottom:8px}ul{margin-left:20px}
+.demo{margin-top:26px;background:#211f10;border-radius:14px;padding:18px}.demo b{color:#fef08a}
+footer{margin-top:50px;font-size:13px;color:#8f8a63}a{color:#fde047}
+</style></head><body><div class="wrap">
+<div class="logo">Fold<span>Why</span></div>
+<div class="tag">Same text, different bytes. Or different text that looks the same.</div>
+<a class="cta" href="app.html">Open the app</a>
+<div class="demo"><b>café</b> typed two ways is two different strings until you normalize. <b>K</b> (Kelvin sign) is not <b>K</b> until compatibility normalization. <b>Straße</b> equals <b>STRASSE</b> only after case folding.</div>
+<h2>What it does</h2>
+<ul><li>Compares two strings at five levels: exact, canonical (NFC), compatibility (NFKC), case folded, and loosest.</li>
+<li>Names the first level where they match and shows each form as code points.</li>
+<li>Shows the length traps: UTF-16 units, code points, characters people see, and length after upper-casing.</li>
+<li>Runs in your browser. Nothing is uploaded.</li></ul>
+<h2>How far to trust it</h2>
+<ul><li>Normalization and upper and lower case matched Python's unicodedata on 6000 random strings built from 66 tricky characters (42000 comparisons, 0 mismatches). The case folding is an approximation, checked only on those 66 characters, and Python 3.10 uses Unicode 13 while browsers use newer versions.</li></ul>
+<footer>Part of the <a href="https://ilanis-agent.github.io/app-factory/">app factory</a>. Source: <a href="https://github.com/iLanis-agent/foldwhy">GitHub</a>.</footer>
+</div></body></html>
